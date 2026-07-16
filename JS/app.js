@@ -2,16 +2,16 @@
   const STORAGE_KEY = "shiny-living-dex-v1";
 
   const games = [
-    "Pokemon Ecarlate", "Pokemon Violet", "Legendes Pokemon Arceus", "Pokemon Epee",
+    "Pokemon Legend Z-A", "Pokemon Ecarlate", "Pokemon Violet", "Legendes Pokemon Arceus", "Pokemon Epee",
     "Pokemon Bouclier", "Pokemon Diamant Etincelant", "Pokemon Perle Scintillante",
-    "Pokemon Let's Go Pikachu", "Pokemon Let's Go Evoli", "Pokemon GO", "Pokemon HOME",
-    "Pokemon Ultra-Soleil", "Pokemon Ultra-Lune", "Pokemon Soleil", "Pokemon Lune",
-    "Pokemon X", "Pokemon Y", "Pokemon Rubis Omega", "Pokemon Saphir Alpha"
+    "Pokemon Let's Go Pikachu", "Pokemon Let's Go Evoli", "Pokemon Ultra-Soleil", "Pokemon Ultra-Lune", "Pokemon Soleil", "Pokemon Lune",
+    "Pokemon X", "Pokemon Y", "Pokemon Rubis Omega", "Pokemon Saphir Alpha", "Pokemon Noir 2", "Pokemon Blanc 2", "Pokemon Noir", "Pokemon Blanc",
+    "Pokemon Platine", "Pokemon Diamant", "Pokemon Perle", "Pokemon HeartGold", "Pokemon SoulSilver", "Pokemon Or", "Pokemon Argent",
+    "Pokemon Cristal", "Pokemon Jaune", "Pokemon Rouge Feu", "Pokemon Vert Feuille", "Pokemon Rouge", "Pokemon Bleu"
   ];
   const methods = [
-    "Rencontre", "Masuda", "Reset", "Raid", "Dynamax Adventures", "Apparition massive",
-    "Sandwich", "Charme Chroma", "Chaine", "Safari des Amis", "Peche a la chaine",
-    "Oeuf", "Echange", "Evenement", "Pokemon GO"
+    "Rencontre", "Masuda", "Reset", "Raid", "Expedition Dynamax", "Apparition massive",
+    "SOS", "Safari des Amis", "Peche a la chaine", "Horde", "Navi-Dex", "Poke-Radar"
   ];
   const balls = [
     "", "Poke Ball", "Super Ball", "Hyper Ball", "Master Ball", "Premier Ball",
@@ -85,8 +85,8 @@
   init();
 
   async function init() {
-    fillDatalist("game-list", games);
-    fillDatalist("method-list", methods);
+    fillSelect(el.game, games, "Jeu non renseigné");
+    fillSelect(el.method, methods, "Méthode non renseignée");
     el.ball.innerHTML = balls.map((ball) => `<option value="${escapeHtml(ball)}">${escapeHtml(ball || "Non renseignee")}</option>`).join("");
     bindEvents();
     renderTabs();
@@ -327,7 +327,11 @@
 
   function renderHuntPage(pagePokemon, owned) {
     const missing = pagePokemon.filter((pokemon) => !state.entries[pokemon.id]?.caught);
-    const currentPick = missing.find((pokemon) => pokemon.id === state.huntPickId) || chooseRandomPokemon(missing);
+    let currentPick =
+      missing.find((pokemon) => pokemon.id === state.huntPickId);
+
+    if (!currentPick)
+      currentPick = chooseRandomPokemon(missing);
     state.huntPickId = currentPick ? currentPick.id : null;
 
     el.pageTitle.textContent = "Hunt aleatoire";
@@ -353,8 +357,8 @@
       </section>
       <div class="hunt-card">${renderCard(currentPick)}</div>
     `;
-    el.grid.querySelector("#reroll-hunt").addEventListener("click", () => {
-      state.huntPickId = chooseRandomPokemon(missing)?.id || null;
+    el.grid.querySelector("#reroll-hunt").addEventListener("click", async () => {
+      await animateHuntRoll(missing);
       render();
     });
     el.grid.querySelector(".pokemon-card").addEventListener("click", () => openEntry(currentPick.id));
@@ -452,8 +456,15 @@
     return Boolean(entry.game || entry.method || entry.encounters || entry.ball || entry.gender);
   }
 
-  function fillDatalist(id, values) {
-    document.querySelector(`#${id}`).innerHTML = values.map((value) => `<option value="${escapeHtml(value)}"></option>`).join("");
+  function fillSelect(select, values, emptyLabel) {
+    select.innerHTML = `
+    <option value="">${escapeHtml(emptyLabel)}</option>
+    ${values.map(value => `
+      <option value="${escapeHtml(value)}">
+        ${escapeHtml(value)}
+      </option>
+    `).join("")}
+  `;
   }
 
   function normaliseSlug(value) {
@@ -487,5 +498,71 @@
       '"': "&quot;",
       "'": "&#39;"
     }[char]));
+  }
+
+  async function animateHuntRoll(missing) {
+
+    const huntCard = document.querySelector(".hunt-card");
+    const rerollButton = document.querySelector("#reroll-hunt");
+
+    if (!huntCard || !rerollButton) return;
+
+    rerollButton.disabled = true;
+    rerollButton.textContent = "🎲 Tirage...";
+
+    const finalPokemon = chooseRandomPokemon(missing);
+
+    huntCard.classList.add("rolling");
+
+    // durée des changements
+    let delay = 45;
+
+    // nombre de pokémon affichés
+    for (let i = 0; i < 18; i++) {
+
+      const randomPokemon = missing[Math.floor(Math.random() * missing.length)];
+
+      updateHuntCard(randomPokemon);
+
+      await new Promise(resolve => setTimeout(resolve, delay));
+
+      // ralentissement progressif
+      delay += 10;
+    }
+
+    // affichage du vrai résultat
+    updateHuntCard(finalPokemon);
+
+    huntCard.classList.remove("rolling");
+    huntCard.classList.add("revealed");
+
+    setTimeout(() => {
+      huntCard.classList.remove("revealed");
+    }, 800);
+
+    rerollButton.disabled = false;
+    rerollButton.textContent = "Relancer";
+
+    state.huntPickId = finalPokemon.id;
+  }
+
+  function updateHuntCard(pokemon) {
+
+    const card = document.querySelector(".hunt-card .pokemon-card");
+
+    if (!card) return;
+
+    const img = card.querySelector("img");
+    const name = card.querySelector(".pokemon-name");
+    const dex = card.querySelector(".dex-number");
+
+    img.src = pokemon.image;
+    img.alt = pokemon.name;
+
+    name.textContent = pokemon.name;
+
+    dex.textContent = "#" + String(pokemon.dex).padStart(3, "0");
+
+    card.dataset.id = pokemon.id;
   }
 })();
