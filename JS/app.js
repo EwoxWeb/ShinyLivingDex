@@ -45,6 +45,7 @@
     status: document.querySelector("#status-filter"),
     exportButton: document.querySelector("#export-button"),
     importInput: document.querySelector("#import-input"),
+    huntButton: document.querySelector("#hunt-button"),
     dialog: document.querySelector("#entry-dialog"),
     form: document.querySelector("#entry-form"),
     dialogNumber: document.querySelector("#dialog-number"),
@@ -106,6 +107,9 @@
     el.form.addEventListener("submit", saveCurrentEntry);
     el.deleteEntry.addEventListener("click", deleteCurrentEntry);
     el.exportButton.addEventListener("click", exportData);
+    el.huntButton.addEventListener("click", () => {
+      location.hash = "hunt";
+    });
     el.importInput.addEventListener("change", importData);
     window.addEventListener("hashchange", () => {
       state.activePage = location.hash.replace("#", "") || "all";
@@ -211,7 +215,7 @@
   }
 
   function renderTabs() {
-    el.tabs.innerHTML = pages.map((page) => (
+    el.tabs.innerHTML = pages.filter((page) => !page.hunt).map((page) => (
       `<button class="tab" type="button" data-page="${page.id}">${page.label}</button>`
     )).join("");
     el.tabs.addEventListener("click", (event) => {
@@ -244,6 +248,7 @@
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.classList.toggle("active", tab.dataset.page === page.id);
     });
+    el.huntButton.classList.toggle("active", page.hunt);
     el.formTabs.classList.toggle("visible", Boolean(page.forms));
     el.formTabs.querySelectorAll("[data-form-category]").forEach((tab) => {
       tab.classList.toggle("active", tab.dataset.formCategory === state.activeFormCategory);
