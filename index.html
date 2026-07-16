@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shiny Living Dex</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="CSS/style.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Pokemon Shiny</p>
+        <h1>Living Dex</h1>
+      </div>
+      <div class="stats" aria-live="polite">
+        <strong id="owned-count">0</strong>
+        <span id="total-count">/ 0 captures</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="toolbar" aria-label="Filtres du dex">
+        <label class="search">
+          <span>Recherche</span>
+          <input id="search-input" type="search" placeholder="Nom, jeu, methode...">
+        </label>
+        <label>
+          <span>Affichage</span>
+          <select id="status-filter">
+            <option value="all">Tous</option>
+            <option value="owned">Captures</option>
+            <option value="missing">Manquants</option>
+          </select>
+        </label>
+        <button id="export-button" type="button">Exporter</button>
+        <label class="import-button">
+          Importer
+          <input id="import-input" type="file" accept="application/json">
+        </label>
+      </section>
+
+      <nav id="generation-tabs" class="tabs" aria-label="Pages du living dex"></nav>
+      <nav id="form-tabs" class="tabs form-tabs" aria-label="Categories de formes"></nav>
+
+      <section class="progress-panel">
+        <div>
+          <h2 id="page-title">Chargement</h2>
+          <p id="page-subtitle">Preparation du dex...</p>
+        </div>
+        <div class="progress-track" aria-hidden="true">
+          <span id="progress-bar"></span>
+        </div>
+      </section>
+
+      <section id="dex-grid" class="dex-grid" aria-live="polite"></section>
+    </main>
+
+    <dialog id="entry-dialog">
+      <form id="entry-form" method="dialog">
+        <div class="dialog-head">
+          <div>
+            <p id="dialog-number" class="eyebrow"></p>
+            <h2 id="dialog-name"></h2>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="Fermer" type="submit">x</button>
+        </div>
+
+        <div class="dialog-preview">
+          <img id="dialog-image" alt="">
+          <label class="caught-toggle">
+            <input id="caught-input" type="checkbox">
+            <span>Shiny obtenu</span>
+          </label>
+        </div>
+
+        <div class="form-grid">
+          <label>
+            <span>Jeu</span>
+            <input id="game-input" name="game" list="game-list" placeholder="Pokemon Ecarlate">
+          </label>
+          <label>
+            <span>Methode</span>
+            <input id="method-input" name="method" list="method-list" placeholder="Masuda, raid, reset...">
+          </label>
+          <label>
+            <span>Rencontres</span>
+            <input id="encounters-input" name="encounters" type="number" min="0" inputmode="numeric" placeholder="Optionnel">
+          </label>
+          <label>
+            <span>Pokeball</span>
+            <select id="ball-input" name="ball"></select>
+          </label>
+          <label>
+            <span>Sexe</span>
+            <select id="gender-input" name="gender">
+              <option value="">Non renseigne</option>
+              <option value="male">Male</option>
+              <option value="female">Femelle</option>
+              <option value="genderless">Asexue</option>
+            </select>
+          </label>
+        </div>
+
+        <menu>
+          <button id="delete-entry" class="danger" type="button">Retirer</button>
+          <button value="cancel" type="submit">Annuler</button>
+          <button id="save-entry" class="primary" value="default" type="submit">Enregistrer</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <datalist id="game-list"></datalist>
+    <datalist id="method-list"></datalist>
+    <script src="JS/local-sprites.js"></script>
+    <script src="JS/pokemon-data.js"></script>
+    <script src="JS/app.js"></script>
+  </body>
+</html>
