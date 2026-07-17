@@ -590,6 +590,10 @@ menu {
   gap: 14px;
 }
 
+.form-grid-full {
+  grid-column: 1 / -1;
+}
+
 menu {
   margin: 20px 0 0;
   padding: 0;

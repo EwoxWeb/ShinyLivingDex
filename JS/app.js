@@ -57,6 +57,7 @@
     encounters: document.querySelector("#encounters-input"),
     ball: document.querySelector("#ball-input"),
     gender: document.querySelector("#gender-input"),
+    origin: document.querySelector("#origin-input"),
     deleteEntry: document.querySelector("#delete-entry")
   };
 
@@ -295,14 +296,23 @@
     if (state.status === "owned" && !entry.caught) return false;
     if (state.status === "missing" && entry.caught) return false;
     if (!state.search) return true;
-    return [pokemon.name, pokemon.slug, entry.game, entry.method, entry.ball, entry.gender]
+    return [pokemon.name, pokemon.slug, entry.game, entry.method, entry.ball, entry.gender, formatOriginLabel(entry.origin)]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(state.search));
   }
 
+  function formatOriginLabel(origin) {
+    if (!origin) return "";
+    if (origin === "direct") return "Obtenu direct";
+    if (origin === "trade") return "Echange / transfert";
+    if (origin.startsWith("evolved:")) return `Evolue depuis ${origin.slice(8)}`;
+    return origin;
+  }
+
   function renderCard(pokemon) {
     const entry = state.entries[pokemon.id] || {};
-    const meta = [entry.game, entry.method, entry.encounters ? `${entry.encounters} rencontres` : ""].filter(Boolean).join(" - ");
+    const originLabel = formatOriginLabel(entry.origin);
+    const meta = [entry.game, entry.method, entry.encounters ? `${entry.encounters} rencontres` : "", originLabel].filter(Boolean).join(" - ");
     return `
       <button class="pokemon-card ${entry.caught ? "owned" : ""}" type="button" data-id="${escapeHtml(pokemon.id)}">
         <span class="dex-number">#${String(pokemon.dex).padStart(3, "0")}</span>
@@ -369,7 +379,7 @@
     return pokemon[Math.floor(Math.random() * pokemon.length)];
   }
 
-  function openEntry(id) {
+  async function openEntry(id) {
     const pokemon = state.pokemon.find((item) => item.id === id);
     if (!pokemon) return;
     const entry = state.entries[id] || {};
@@ -384,7 +394,88 @@
     el.encounters.value = entry.encounters || "";
     el.ball.value = entry.ball || "";
     el.gender.value = entry.gender || "";
+
+    // Chaîne d'évolution
+    el.origin.innerHTML = `<option value="">Chargement...</option>`;
+    el.origin.disabled = true;
+    const chain = await fetchEvolutionChain(pokemon);
+    buildOriginSelect(chain, pokemon.name, entry.origin || "");
+
     el.dialog.showModal();
+  }
+
+  // Cache pour éviter des requêtes répétées
+  const evoCache = new Map();
+
+  async function fetchEvolutionChain(pokemon) {
+    if (pokemon.isForm || !pokemon.dex) return [];
+    const cacheKey = pokemon.dex;
+    if (evoCache.has(cacheKey)) return evoCache.get(cacheKey);
+    try {
+      const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemon.dex}/`);
+      if (!speciesRes.ok) throw new Error();
+      const species = await speciesRes.json();
+      const chainRes = await fetch(species.evolution_chain.url);
+      if (!chainRes.ok) throw new Error();
+      const chainData = await chainRes.json();
+
+      // Collecter tous les slugs de la chaîne
+      const slugs = [];
+      extractSlugs(chainData.chain, slugs);
+
+      // Récupérer les noms FR pour chaque slug en parallèle
+      const names = await Promise.all(slugs.map(async (slug) => {
+        try {
+          const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${slug}/`);
+          if (!res.ok) return slug;
+          const data = await res.json();
+          return data.names?.find(n => n.language.name === "fr")?.name || slug;
+        } catch {
+          return slug;
+        }
+      }));
+
+      evoCache.set(cacheKey, names);
+      return names;
+    } catch {
+      return [];
+    }
+  }
+
+  function extractSlugs(node, result = []) {
+    result.push(node.species.name);
+    for (const next of node.evolves_to || []) extractSlugs(next, result);
+    return result;
+  }
+
+  function normaliseForCompare(str) {
+    return String(str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  }
+
+  function buildOriginSelect(chain, currentName, savedValue) {
+    const currentNorm = normaliseForCompare(currentName);
+    const currentIndex = chain.findIndex(n => normaliseForCompare(n) === currentNorm);
+
+    if (currentIndex <= 0) {
+      el.origin.innerHTML = `
+        <option value="">Non renseignee</option>
+        <option value="direct">Obtenu directement (${escapeHtml(currentName)})</option>
+        <option value="trade">Recu par echange / transfert</option>
+      `;
+    } else {
+      const prevOptions = chain.slice(0, currentIndex).map(name =>
+        `<option value="evolved:${escapeHtml(name)}">Evolue depuis ${escapeHtml(name)}</option>`
+      ).join("");
+      el.origin.innerHTML = `
+        <option value="">Non renseignee</option>
+        <option value="direct">Obtenu directement (${escapeHtml(currentName)})</option>
+        ${prevOptions}
+        <option value="trade">Recu par echange / transfert</option>
+      `;
+    }
+
+    el.origin.value = savedValue;
+    el.origin.disabled = false;
   }
 
   function saveCurrentEntry(event) {
@@ -396,7 +487,8 @@
       method: el.method.value.trim(),
       encounters: el.encounters.value,
       ball: el.ball.value,
-      gender: el.gender.value
+      gender: el.gender.value,
+      origin: el.origin.value
     };
     if (!state.entries[id].caught && !hasDetails(state.entries[id])) delete state.entries[id];
     saveEntries();
@@ -453,7 +545,7 @@
   }
 
   function hasDetails(entry) {
-    return Boolean(entry.game || entry.method || entry.encounters || entry.ball || entry.gender);
+    return Boolean(entry.game || entry.method || entry.encounters || entry.ball || entry.gender || entry.origin);
   }
 
   function fillSelect(select, values, emptyLabel) {
