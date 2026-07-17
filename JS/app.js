@@ -11,10 +11,10 @@
   ];
   const methods = [
     "Rencontre", "Masuda", "Reset", "Raid", "Expedition Dynamax", "Apparition massive",
-    "SOS", "Safari des Amis", "Peche a la chaine", "Horde", "Navi-Dex", "Poke-Radar"
+    "SOS", "Safari des Amis", "Peche a la chaine", "Horde", "Navi-Dex", "Poke-Radar", "Scanner des îles"
   ];
   const balls = [
-    "", "Poke Ball", "Super Ball", "Hyper Ball", "Master Ball", "Premier Ball",
+    "", "Poke Ball", "Super Ball", "Hyper Ball", "Master Ball",
     "Honor Ball", "Luxe Ball", "Soin Ball", "Filet Ball", "Scuba Ball", "Faiblo Ball",
     "Chrono Ball", "Bis Ball", "Rapide Ball", "Sombre Ball", "Memoire Ball",
     "Safari Ball", "Parc Ball", "Speed Ball", "Niveau Ball", "Appat Ball",
@@ -460,7 +460,6 @@
       el.origin.innerHTML = `
         <option value="">Non renseignee</option>
         <option value="direct">Obtenu directement (${escapeHtml(currentName)})</option>
-        <option value="trade">Recu par echange / transfert</option>
       `;
     } else {
       const prevOptions = chain.slice(0, currentIndex).map(name =>
@@ -470,7 +469,6 @@
         <option value="">Non renseignee</option>
         <option value="direct">Obtenu directement (${escapeHtml(currentName)})</option>
         ${prevOptions}
-        <option value="trade">Recu par echange / transfert</option>
       `;
     }
 
