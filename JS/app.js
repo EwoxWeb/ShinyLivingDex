@@ -6,8 +6,9 @@
     "Pokemon Bouclier", "Pokemon Diamant Etincelant", "Pokemon Perle Scintillante",
     "Pokemon Let's Go Pikachu", "Pokemon Let's Go Evoli", "Pokemon Ultra-Soleil", "Pokemon Ultra-Lune", "Pokemon Soleil", "Pokemon Lune", "Pokemon Go",
     "Pokemon X", "Pokemon Y", "Pokemon Rubis Omega", "Pokemon Saphir Alpha", "Pokemon Noir 2", "Pokemon Blanc 2", "Pokemon Noir", "Pokemon Blanc",
-    "Pokemon Platine", "Pokemon Diamant", "Pokemon Perle", "Pokemon HeartGold", "Pokemon SoulSilver", "Pokemon Or", "Pokemon Argent",
-    "Pokemon Cristal", "Pokemon Jaune", "Pokemon Rouge Feu", "Pokemon Vert Feuille", "Pokemon Rouge", "Pokemon Bleu"
+    "Pokemon Platine", "Pokemon Diamant", "Pokemon Perle", "Pokemon HeartGold", "Pokemon SoulSilver",
+    "Pokemon Rubis", "Pokemon Saphir", "Pokemon Emeraude", "Pokemon Rouge Feu", "Pokemon Vert Feuille",
+    "Pokemon Or", "Pokemon Argent", "Pokemon Cristal", "Pokemon Jaune", "Pokemon Rouge", "Pokemon Bleu"
   ];
   const methods = [
     "Rencontre", "Masuda", "Reset", "Raid", "Expedition Dynamax", "Apparition massive",
