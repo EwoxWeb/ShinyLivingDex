@@ -386,10 +386,24 @@
     if (!pokemon) return;
     const entry = state.entries[id] || {};
     state.current = pokemon;
+
+    // Reset explicite pour éviter tout résidu d'une ouverture précédente
+    el.caught.checked = false;
+    el.game.value = "";
+    el.method.value = "";
+    el.encounters.value = "";
+    el.ball.value = "";
+    el.gender.value = "";
+    el.date.value = "";
+    el.date.removeAttribute("value");
+    el.origin.disabled = true;
+
     el.dialogNumber.textContent = `#${String(pokemon.dex).padStart(3, "0")}`;
     el.dialogName.textContent = pokemon.name;
     el.dialogImage.src = pokemon.image;
     el.dialogImage.alt = pokemon.name;
+
+    // Remplissage avec les vraies valeurs
     el.caught.checked = Boolean(entry.caught);
     el.game.value = entry.game || "";
     el.method.value = entry.method || "";
@@ -398,9 +412,6 @@
     el.gender.value = entry.gender || "";
     el.date.value = entry.date || "";
 
-    // Chaîne d'évolution
-    el.origin.innerHTML = `<option value="">Chargement...</option>`;
-    el.origin.disabled = true;
     const chain = await fetchEvolutionChain(pokemon);
     buildOriginSelect(chain, pokemon.name, entry.origin || "");
 
