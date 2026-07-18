@@ -4,18 +4,17 @@
   const games = [
     "Pokemon Legend Z-A", "Pokemon Ecarlate", "Pokemon Violet", "Legendes Pokemon Arceus", "Pokemon Epee",
     "Pokemon Bouclier", "Pokemon Diamant Etincelant", "Pokemon Perle Scintillante",
-    "Pokemon Let's Go Pikachu", "Pokemon Let's Go Evoli", "Pokemon Ultra-Soleil", "Pokemon Ultra-Lune", "Pokemon Soleil", "Pokemon Lune", "Pokemon Go",
+    "Pokemon Let's Go Pikachu", "Pokemon Let's Go Evoli", "Pokemon Ultra-Soleil", "Pokemon Ultra-Lune", "Pokemon Soleil", "Pokemon Lune",
     "Pokemon X", "Pokemon Y", "Pokemon Rubis Omega", "Pokemon Saphir Alpha", "Pokemon Noir 2", "Pokemon Blanc 2", "Pokemon Noir", "Pokemon Blanc",
-    "Pokemon Platine", "Pokemon Diamant", "Pokemon Perle", "Pokemon HeartGold", "Pokemon SoulSilver",
-    "Pokemon Rubis", "Pokemon Saphir", "Pokemon Emeraude", "Pokemon Rouge Feu", "Pokemon Vert Feuille",
-    "Pokemon Or", "Pokemon Argent", "Pokemon Cristal", "Pokemon Jaune", "Pokemon Rouge", "Pokemon Bleu"
+    "Pokemon Platine", "Pokemon Diamant", "Pokemon Perle", "Pokemon HeartGold", "Pokemon SoulSilver", "Pokemon Or", "Pokemon Argent",
+    "Pokemon Cristal", "Pokemon Jaune", "Pokemon Rouge Feu", "Pokemon Vert Feuille", "Pokemon Rouge", "Pokemon Bleu"
   ];
   const methods = [
     "Rencontre", "Masuda", "Reset", "Raid", "Expedition Dynamax", "Apparition massive",
-    "SOS", "Safari des Amis", "Peche a la chaine", "Horde", "Navi-Dex", "Poke-Radar", "Scanner des îles"
+    "SOS", "Safari des Amis", "Peche a la chaine", "Horde", "Navi-Dex", "Poke-Radar"
   ];
   const balls = [
-    "", "Poke Ball", "Super Ball", "Hyper Ball", "Master Ball",
+    "", "Poke Ball", "Super Ball", "Hyper Ball", "Master Ball", "Premier Ball",
     "Honor Ball", "Luxe Ball", "Soin Ball", "Filet Ball", "Scuba Ball", "Faiblo Ball",
     "Chrono Ball", "Bis Ball", "Rapide Ball", "Sombre Ball", "Memoire Ball",
     "Safari Ball", "Parc Ball", "Speed Ball", "Niveau Ball", "Appat Ball",
@@ -58,6 +57,7 @@
     encounters: document.querySelector("#encounters-input"),
     ball: document.querySelector("#ball-input"),
     gender: document.querySelector("#gender-input"),
+    date: document.querySelector("#date-input"),
     origin: document.querySelector("#origin-input"),
     deleteEntry: document.querySelector("#delete-entry")
   };
@@ -313,7 +313,8 @@
   function renderCard(pokemon) {
     const entry = state.entries[pokemon.id] || {};
     const originLabel = formatOriginLabel(entry.origin);
-    const meta = [entry.game, entry.method, entry.encounters ? `${entry.encounters} rencontres` : "", originLabel].filter(Boolean).join(" - ");
+    const dateLabel = entry.date ? new Date(entry.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" }) : "";
+    const meta = [entry.game, entry.method, entry.encounters ? `${entry.encounters} rencontres` : "", originLabel, dateLabel].filter(Boolean).join(" - ");
     return `
       <button class="pokemon-card ${entry.caught ? "owned" : ""}" type="button" data-id="${escapeHtml(pokemon.id)}">
         <span class="dex-number">#${String(pokemon.dex).padStart(3, "0")}</span>
@@ -395,6 +396,7 @@
     el.encounters.value = entry.encounters || "";
     el.ball.value = entry.ball || "";
     el.gender.value = entry.gender || "";
+    el.date.value = entry.date || "";
 
     // Chaîne d'évolution
     el.origin.innerHTML = `<option value="">Chargement...</option>`;
@@ -461,6 +463,7 @@
       el.origin.innerHTML = `
         <option value="">Non renseignee</option>
         <option value="direct">Obtenu directement (${escapeHtml(currentName)})</option>
+        <option value="trade">Recu par echange / transfert</option>
       `;
     } else {
       const prevOptions = chain.slice(0, currentIndex).map(name =>
@@ -470,6 +473,7 @@
         <option value="">Non renseignee</option>
         <option value="direct">Obtenu directement (${escapeHtml(currentName)})</option>
         ${prevOptions}
+        <option value="trade">Recu par echange / transfert</option>
       `;
     }
 
@@ -487,6 +491,7 @@
       encounters: el.encounters.value,
       ball: el.ball.value,
       gender: el.gender.value,
+      date: el.date.value,
       origin: el.origin.value
     };
     if (!state.entries[id].caught && !hasDetails(state.entries[id])) delete state.entries[id];
@@ -544,7 +549,7 @@
   }
 
   function hasDetails(entry) {
-    return Boolean(entry.game || entry.method || entry.encounters || entry.ball || entry.gender || entry.origin);
+    return Boolean(entry.game || entry.method || entry.encounters || entry.ball || entry.gender || entry.date || entry.origin);
   }
 
   function fillSelect(select, values, emptyLabel) {
