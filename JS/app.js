@@ -474,7 +474,6 @@
       el.origin.innerHTML = `
         <option value="">Non renseignee</option>
         <option value="direct">Obtenu directement (${escapeHtml(currentName)})</option>
-        <option value="trade">Recu par echange / transfert</option>
       `;
     } else {
       const prevOptions = chain.slice(0, currentIndex).map(name =>
@@ -484,7 +483,6 @@
         <option value="">Non renseignee</option>
         <option value="direct">Obtenu directement (${escapeHtml(currentName)})</option>
         ${prevOptions}
-        <option value="trade">Recu par echange / transfert</option>
       `;
     }
 
