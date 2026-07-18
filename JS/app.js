@@ -6,15 +6,15 @@
     "Pokemon Bouclier", "Pokemon Diamant Etincelant", "Pokemon Perle Scintillante",
     "Pokemon Let's Go Pikachu", "Pokemon Let's Go Evoli", "Pokemon Ultra-Soleil", "Pokemon Ultra-Lune", "Pokemon Soleil", "Pokemon Lune",
     "Pokemon X", "Pokemon Y", "Pokemon Rubis Omega", "Pokemon Saphir Alpha", "Pokemon Noir 2", "Pokemon Blanc 2", "Pokemon Noir", "Pokemon Blanc",
-    "Pokemon Platine", "Pokemon Diamant", "Pokemon Perle", "Pokemon HeartGold", "Pokemon SoulSilver", "Pokemon Or", "Pokemon Argent",
-    "Pokemon Cristal", "Pokemon Jaune", "Pokemon Rouge Feu", "Pokemon Vert Feuille", "Pokemon Rouge", "Pokemon Bleu"
+    "Pokemon Platine", "Pokemon Diamant", "Pokemon Perle", "Pokemon HeartGold", "Pokemon SoulSilver", "Pokemon Rubis", "Pokemon Saphir", "Pokemon Emeraude",
+    "Pokemon Or", "Pokemon Argent", "Pokemon Cristal", "Pokemon Jaune", "Pokemon Rouge Feu", "Pokemon Vert Feuille", "Pokemon Rouge", "Pokemon Bleu"
   ];
   const methods = [
     "Rencontre", "Masuda", "Reset", "Raid", "Expedition Dynamax", "Apparition massive",
     "SOS", "Safari des Amis", "Peche a la chaine", "Horde", "Navi-Dex", "Poke-Radar"
   ];
   const balls = [
-    "", "Poke Ball", "Super Ball", "Hyper Ball", "Master Ball", "Premier Ball",
+    "", "Poke Ball", "Super Ball", "Hyper Ball", "Master Ball",
     "Honor Ball", "Luxe Ball", "Soin Ball", "Filet Ball", "Scuba Ball", "Faiblo Ball",
     "Chrono Ball", "Bis Ball", "Rapide Ball", "Sombre Ball", "Memoire Ball",
     "Safari Ball", "Parc Ball", "Speed Ball", "Niveau Ball", "Appat Ball",
