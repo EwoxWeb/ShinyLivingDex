@@ -636,6 +636,7 @@ menu {
 }
 
 @media (max-width: 760px) {
+
   main,
   .app-header {
     width: min(100% - 20px, 1540px);
@@ -707,55 +708,55 @@ menu {
 /* ========================= */
 
 .hunt-card {
-    position: relative;
-    overflow: visible;
+  position: relative;
+  overflow: visible;
 }
 
 .hunt-card .pokemon-card {
-    transition:
-        transform .25s ease,
-        opacity .25s ease,
-        filter .25s ease;
+  transition:
+    transform .25s ease,
+    opacity .25s ease,
+    filter .25s ease;
 }
 
 .hunt-card.rolling .pokemon-card {
-    transform: scale(.92);
-    opacity: .75;
-    filter: blur(2px);
+  transform: scale(.92);
+  opacity: .75;
+  filter: blur(2px);
 }
 
 .hunt-card.revealed .pokemon-card {
-    animation: huntReveal .7s ease;
+  animation: huntReveal .7s ease;
 }
 
 /* Bouton pendant le tirage */
 
 #reroll-hunt:disabled {
-    cursor: not-allowed;
-    opacity: .65;
+  cursor: not-allowed;
+  opacity: .65;
 }
 
 /* Particules */
 
 .hunt-card::before,
 .hunt-card::after {
-    content: "✨";
-    position: absolute;
-    font-size: 26px;
-    opacity: 0;
-    pointer-events: none;
+  content: "✨";
+  position: absolute;
+  font-size: 26px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .hunt-card.revealed::before {
-    top: 10%;
-    left: 12%;
-    animation: sparkle .8s ease;
+  top: 10%;
+  left: 12%;
+  animation: sparkle .8s ease;
 }
 
 .hunt-card.revealed::after {
-    right: 12%;
-    bottom: 18%;
-    animation: sparkle .8s ease .12s;
+  right: 12%;
+  bottom: 18%;
+  animation: sparkle .8s ease .12s;
 }
 
 /* ========================= */
@@ -764,38 +765,38 @@ menu {
 
 @keyframes huntReveal {
 
-    0% {
-        transform: scale(.85);
-    }
+  0% {
+    transform: scale(.85);
+  }
 
-    45% {
-        transform: scale(1.12);
-    }
+  45% {
+    transform: scale(1.12);
+  }
 
-    70% {
-        transform: scale(.96);
-    }
+  70% {
+    transform: scale(.96);
+  }
 
-    100% {
-        transform: scale(1);
-    }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes sparkle {
 
-    0% {
-        opacity: 0;
-        transform: translateY(10px) scale(.4) rotate(0deg);
-    }
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(.4) rotate(0deg);
+  }
 
-    35% {
-        opacity: 1;
-    }
+  35% {
+    opacity: 1;
+  }
 
-    100% {
-        opacity: 0;
-        transform: translateY(-40px) scale(1.5) rotate(180deg);
-    }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(1.5) rotate(180deg);
+  }
 }
 
 /* ========================= */
@@ -996,53 +997,634 @@ menu {
   font-size: .75rem;
 }
 
-/* Timeline chart */
+/* ========================= */
+/* Timeline                  */
+/* ========================= */
 
-.tl-chart {
-  display: flex;
-  align-items: stretch;
-  gap: 6px;
-  min-height: 220px;
-  padding: 10px 6px 6px;
-  position: relative;
-  overflow-x: auto;
-  overflow-y: hidden;
+.timeline-card {
+  overflow: visible;
 }
 
-.tl-col {
+.tl-years {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  min-height: 270px;
+  padding: 65px 4px 4px;
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+/* Groupe année */
+
+.tl-year-group {
+  flex: 0 0 62px;
+  min-width: 62px;
+  transition:
+    flex-basis .35s cubic-bezier(.4, 0, .2, 1),
+    min-width .35s cubic-bezier(.4, 0, .2, 1);
+}
+
+.tl-year-group.open {
+  flex-basis: 540px;
+  min-width: 540px;
+}
+
+/* Année fermée */
+
+.tl-year-closed {
+  height: 205px;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-end;
-  height: auto;
-  cursor: default;
-  min-width: 44px;
-  flex: 1 0 44px;
 }
+
+.tl-year-group.open .tl-year-closed {
+  display: none;
+}
+
+/* Zone des barres */
+
+.tl-bar-zone {
+  position: relative;
+  height: 170px;
+  display: flex;
+  align-items: flex-end;
+  min-height: 0;
+}
+
+/* Barres */
 
 .tl-bar {
+  position: relative;
   width: 100%;
-  min-height: 4px;
-  border-radius: 6px 6px 2px 2px;
+  min-height: 3px;
+  border-radius: 7px 7px 2px 2px;
   background: linear-gradient(180deg, var(--gold), var(--accent-strong));
-  box-shadow: 0 0 8px rgba(96, 180, 255, .22);
-  transition: opacity .2s;
+  box-shadow: 0 0 9px rgba(96, 180, 255, .25);
+  transition:
+    filter .2s ease,
+    transform .2s ease;
 }
 
-.tl-col:hover .tl-bar {
-  opacity: .75;
+.tl-bar:hover {
+  filter:
+    brightness(1.15) drop-shadow(0 0 7px rgba(96, 180, 255, .4));
+  transform: scaleX(1.04);
 }
 
-.tl-label {
-  margin-top: 8px;
-  font-size: .72rem;
-  font-family: Rajdhani, Nunito, sans-serif;
-  font-weight: 600;
+/* Bouton année */
+
+.tl-year-toggle {
+  width: 100%;
+  min-height: 28px;
+  margin-top: 7px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: #a9c7e4;
+  font-family: Rajdhani, Nunito, sans-serif;
+  font-size: .75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.tl-year-toggle:hover {
+  background: rgba(96, 180, 255, .08);
+  color: var(--gold);
+  transform: none;
+  box-shadow: none;
+}
+
+.tl-year-arrow {
+  font-size: .8rem;
+}
+
+/* Année ouverte */
+
+.tl-year-open {
+  display: none;
+}
+
+.tl-year-group.open .tl-year-open {
+  display: block;
+}
+
+.tl-open-header {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.tl-year-toggle-open {
+  width: auto;
+  margin: 0;
+  padding: 3px 8px;
+  justify-content: flex-start;
+  color: var(--gold);
+}
+
+.tl-year-total {
+  color: var(--muted);
+  font-size: .68rem;
+  font-weight: 600;
+}
+
+/* Mois */
+
+.tl-months {
+  height: 205px;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(34px, 1fr));
+  gap: 6px;
+  align-items: end;
+}
+
+.tl-month-col {
+  height: 205px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tl-month-label {
+  height: 28px;
+  margin-top: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-family: Rajdhani, Nunito, sans-serif;
+  font-size: .68rem;
+  font-weight: 600;
   text-align: center;
   white-space: nowrap;
+}
+
+.tl-month-col:has(.tl-bar-zone:empty) .tl-month-label {
+  opacity: .45;
+}
+
+/* Tooltip */
+
+.tl-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 120px;
+  padding: 9px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background:
+    linear-gradient(145deg,
+      rgba(26, 45, 74, .98),
+      rgba(12, 23, 41, .98));
+  box-shadow:
+    0 12px 28px rgba(2, 9, 20, .55),
+    0 0 18px rgba(96, 180, 255, .16);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(5px) scale(.96);
+  transition:
+    opacity .16s ease,
+    transform .16s ease,
+    visibility .16s;
+}
+
+.tl-tooltip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  background: #101d32;
+  border-right: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.tl-tooltip-date {
+  color: var(--muted);
+  font-family: Rajdhani, Nunito, sans-serif;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.tl-tooltip-value {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  color: var(--text);
+  font-family: Rajdhani, Nunito, sans-serif;
+  font-size: .82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tl-tooltip-value strong {
+  color: var(--gold);
+  font-size: 1.15rem;
+  line-height: 1;
+  text-shadow: 0 0 12px rgba(184, 220, 255, .35);
+}
+
+.tl-bar:hover .tl-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* ===================================== */
+/* Amélioration années ouvertes          */
+/* ===================================== */
+
+/* Header d'une année ouverte */
+.tl-open-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/* Bouton pour refermer */
+.tl-year-toggle-open {
+  width: auto;
+  min-height: 30px;
+
+  margin: 0;
+  padding: 4px 10px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+
+  border: 1px solid rgba(96, 180, 255, .18);
+  border-radius: 8px;
+
+  background: rgba(96, 180, 255, .06);
+
+  color: var(--text);
+
+  box-shadow: none;
+
+  transition:
+    background .2s ease,
+    border-color .2s ease,
+    box-shadow .2s ease;
+}
+
+.tl-year-toggle-open:hover {
+  background: rgba(96, 180, 255, .12);
+
+  border-color: var(--line-strong);
+
+  color: var(--gold);
+
+  box-shadow:
+    0 0 14px rgba(96, 180, 255, .10);
+
+  transform: none;
+}
+
+/* Année */
+.tl-year-toggle-open>span:first-child {
+  color: var(--gold);
+
+  font-family: Rajdhani, Nunito, sans-serif;
+  font-size: .8rem;
+  font-weight: 700;
+
   letter-spacing: .04em;
-  text-shadow: 0 1px 0 rgba(2, 9, 20, .55);
+}
+
+/* "35 shiny" */
+.tl-year-total {
+  padding-left: 7px;
+
+  border-left: 1px solid var(--line);
+
+  color: var(--muted);
+
+  font-size: .7rem;
+  font-weight: 600;
+}
+
+/* Flèche */
+.tl-year-toggle-open .tl-year-arrow {
+  width: 18px;
+  height: 18px;
+
+  margin-left: 2px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 5px;
+
+  background: rgba(96, 180, 255, .10);
+
+  color: var(--accent);
+
+  font-size: .75rem;
+
+  transition:
+    background .2s ease,
+    transform .2s ease;
+}
+
+.tl-year-toggle-open:hover .tl-year-arrow {
+  background: rgba(96, 180, 255, .18);
+
+  transform: translateY(-1px);
+}
+
+
+/* ===================================== */
+/* Séparation entre les années           */
+/* ===================================== */
+
+.tl-year-group {
+  position: relative;
+}
+
+/* Barre entre deux groupes */
+.tl-year-group:not(:last-child)::after {
+  content: "";
+
+  position: absolute;
+
+  top: 8px;
+  right: -7px;
+  bottom: 8px;
+
+  width: 1px;
+
+  background:
+    linear-gradient(180deg,
+      transparent 0%,
+      rgba(96, 180, 255, .22) 15%,
+      rgba(96, 180, 255, .38) 50%,
+      rgba(96, 180, 255, .22) 85%,
+      transparent 100%);
+
+  box-shadow:
+    0 0 6px rgba(96, 180, 255, .12);
+
+  pointer-events: none;
+}
+
+/* ============================= */
+/* Timeline - barres cliquables  */
+/* ============================= */
+
+.tl-year-bar,
+.tl-month-bar {
+  cursor: pointer;
+}
+
+.tl-year-bar:hover,
+.tl-month-bar:hover {
+  filter:
+    brightness(1.2) drop-shadow(0 0 9px rgba(96, 180, 255, .55));
+
+  transform: scaleX(1.06);
+}
+
+
+/* ============================= */
+/* Résultats d'une période       */
+/* ============================= */
+
+.timeline-results {
+  grid-column: 1 / -1;
+
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 22px;
+
+  padding-bottom: 56px;
+}
+
+
+/* Header */
+
+.timeline-results-header {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  min-height: 100px;
+
+  padding: 18px 20px;
+
+  border: 1px solid var(--line);
+  border-radius: 14px;
+
+  background:
+    radial-gradient(circle at 85% 20%,
+      rgba(96, 180, 255, .12),
+      transparent 20rem),
+    rgba(96, 180, 255, .07);
+
+  box-shadow: var(--shadow);
+}
+
+
+/* Bouton retour */
+
+.timeline-back {
+  flex: 0 0 auto;
+}
+
+.timeline-back span {
+  font-size: 1.1rem;
+
+  transition: transform .2s ease;
+}
+
+.timeline-back:hover span {
+  transform: translateX(-3px);
+}
+
+
+/* Titre */
+
+.timeline-results-title {
+  position: absolute;
+
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  text-align: center;
+}
+
+.timeline-results-title .eyebrow {
+  margin-bottom: 2px;
+}
+
+.timeline-results-title h3 {
+  margin: 0;
+
+  color: var(--text);
+
+  font-family: Rajdhani, Nunito, sans-serif;
+
+  font-size: 1.5rem;
+  font-weight: 700;
+
+  letter-spacing: .05em;
+
+  text-transform: capitalize;
+}
+
+.timeline-results-title p {
+  margin: 2px 0 0;
+
+  color: var(--muted);
+
+  font-size: .8rem;
+}
+
+/* ============================= */
+/* Tooltip toujours au premier plan */
+/* ============================= */
+
+.tl-year-group {
+  position: relative;
+  z-index: 1;
+}
+
+/* Le groupe survolé passe devant tous les autres */
+.tl-year-group:hover {
+  z-index: 100;
+}
+
+.tl-month-col {
+  position: relative;
+  z-index: 1;
+}
+
+/* Le mois survolé passe devant les autres barres */
+.tl-month-col:hover {
+  z-index: 200;
+}
+
+/* La barre survolée et son tooltip au premier plan */
+.tl-bar:hover {
+  z-index: 300;
+}
+
+.tl-tooltip {
+  z-index: 1000;
+}
+
+/* Méthodes cliquables */
+
+.stat-bar-clickable {
+  cursor: pointer;
+
+  padding: 5px 7px;
+  margin: -5px -7px;
+
+  border-radius: 8px;
+
+  transition:
+    background .2s ease,
+    transform .2s ease;
+}
+
+.stat-bar-clickable:hover {
+  background: rgba(96, 180, 255, .08);
+}
+
+.stat-bar-clickable:hover .stat-bar-fill {
+  filter: brightness(1.2);
+
+  box-shadow:
+    0 0 14px rgba(96, 180, 255, .48);
+}
+
+.stat-bar-clickable:hover .stat-bar-label {
+  color: var(--gold);
+}
+
+
+/* Grille Pokémon */
+
+.timeline-pokemon-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fill, minmax(136px, 1fr));
+
+  gap: 18px;
+}
+
+
+/* Mobile */
+
+@media (max-width: 760px) {
+
+  .timeline-results-header {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 16px;
+  }
+
+  .timeline-results-title {
+    position: static;
+
+    width: 100%;
+
+    transform: none;
+  }
+
+  .timeline-pokemon-grid {
+    grid-template-columns:
+      repeat(auto-fill, minmax(102px, 1fr));
+
+    gap: 10px;
+  }
+}
+
+/* Timeline mobile */
+
+@media (max-width: 760px) {
+  .tl-year-group.open {
+    flex-basis: 480px;
+    min-width: 480px;
+  }
+
+  .tl-months {
+    grid-template-columns: repeat(12, 34px);
+  }
 }
 
 @media (max-width: 760px) {

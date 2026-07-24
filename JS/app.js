@@ -118,6 +118,56 @@
     el.statsButton.addEventListener("click", () => {
       location.hash = "stats";
     });
+    el.grid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-timeline-year]");
+
+      if (!button) return;
+
+      const group = button.closest(".tl-year-group");
+
+      if (!group) return;
+
+      const isOpen = group.classList.toggle("open");
+
+      button.setAttribute(
+        "aria-expanded",
+        String(isOpen)
+      );
+    });
+    el.grid.addEventListener("click", (event) => {
+
+      const bar = event.target.closest(
+        "[data-timeline-open-year]"
+      );
+
+      if (!bar) return;
+
+      const year = Number(
+        bar.dataset.timelineOpenYear
+      );
+
+      const month = bar.dataset.timelineOpenMonth
+        ? Number(bar.dataset.timelineOpenMonth)
+        : null;
+
+      openTimelinePeriod(year, month);
+    });
+    el.grid.addEventListener("click", (event) => {
+
+      const row = event.target.closest("[data-open-method]");
+
+      if (!row) return;
+
+      openMethodPage(row.dataset.openMethod);
+    });
+    el.grid.addEventListener("click", (event) => {
+
+      const row = event.target.closest("[data-open-game]");
+
+      if (!row) return;
+
+      openGamePage(row.dataset.openGame);
+    });
     window.addEventListener("hashchange", () => {
       state.activePage = location.hash.replace("#", "") || "all";
       render();
@@ -245,6 +295,7 @@
   }
 
   function render() {
+    document.querySelector(".progress-panel").style.display = "";
     if (!pages.some((page) => page.id === state.activePage)) state.activePage = "all";
     const page = pages.find((item) => item.id === state.activePage);
     const pagePokemon = getPagePokemon(page);
@@ -724,8 +775,28 @@
       const averagePart = averages && averages[label] !== null && averages[label] !== undefined
         ? ` - moy. ${averages[label].toLocaleString("fr-FR")}`
         : "";
+      const cleanTitle = title.toLowerCase();
+
+      const isMethodChart =
+        cleanTitle.includes("méthode") ||
+        cleanTitle.includes("methode");
+
+      const isGameChart =
+        cleanTitle.includes("jeu");
+
+      let clickableAttributes = "";
+
+      if (isMethodChart) {
+        clickableAttributes = `data-open-method="${escapeHtml(label)}"`;
+      }
+
+      if (isGameChart) {
+        clickableAttributes = `data-open-game="${escapeHtml(label)}"`;
+      }
+
+      const isClickable = isMethodChart || isGameChart;
       return `
-        <div class="stat-bar-row">
+        <div class="stat-bar-row ${isClickable ? "stat-bar-clickable" : ""}" ${clickableAttributes}>
           <span class="stat-bar-label" title="${escapeHtml(label)}">${escapeHtml(label)}${escapeHtml(averagePart)}</span>
           <div class="stat-bar-track">
             <div class="stat-bar-fill" style="width:${pct}%"></div>
@@ -743,25 +814,473 @@
     `;
   }
 
+  function openMethodPage(method) {
+    document.querySelector(".progress-panel").style.display = "none";
+    const pokemon = state.pokemon
+      .filter((p) => {
+        const entry = state.entries[p.id];
+
+        return (
+          entry?.caught &&
+          (entry.method || "Non renseigne") === method
+        );
+      })
+      .sort((a, b) => {
+        return (a.dex || 9999) - (b.dex || 9999)
+          || a.name.localeCompare(b.name);
+      });
+
+    el.pageTitle.textContent = method;
+
+    el.pageSubtitle.textContent =
+      `${pokemon.length} shiny${pokemon.length > 1 ? "s" : ""} obtenu${pokemon.length > 1 ? "s" : ""} avec cette méthode`;
+
+    el.progressBar.style.width = "100%";
+
+    el.grid.innerHTML = `
+    <div class="timeline-results">
+
+      <div class="timeline-results-header">
+
+        <button
+          id="method-back"
+          class="timeline-back"
+          type="button"
+        >
+          <span>←</span>
+          Retour aux statistiques
+        </button>
+
+        <div class="timeline-results-title">
+
+          <span class="eyebrow">
+            Méthode de chasse
+          </span>
+
+          <h3>
+            ${escapeHtml(method)}
+          </h3>
+
+          <p>
+            ${pokemon.length}
+            shiny${pokemon.length > 1 ? "s" : ""}
+          </p>
+
+        </div>
+
+      </div>
+
+      <div class="timeline-pokemon-grid">
+
+        ${pokemon.length
+        ? renderGridCards(pokemon, { all: false })
+        : `
+              <p class="empty-state">
+                Aucun shiny obtenu avec cette méthode.
+              </p>
+            `
+      }
+
+      </div>
+
+    </div>
+  `;
+
+    // Retour aux statistiques
+    el.grid
+      .querySelector("#method-back")
+      ?.addEventListener("click", () => {
+        document.querySelector(".progress-panel").style.display = "";
+        renderStatsPageOptimized();
+      });
+
+    // Les cartes Pokémon restent cliquables
+    el.grid
+      .querySelectorAll(".pokemon-card")
+      .forEach((card) => {
+        card.addEventListener("click", () => {
+          openEntry(card.dataset.id);
+        });
+      });
+  }
+
+  function openGamePage(game) {
+    // On masque le bloc progression
+    document.querySelector(".progress-panel").style.display = "none";
+
+    const pokemon = state.pokemon
+      .filter((p) => {
+        const entry = state.entries[p.id];
+
+        return (
+          entry?.caught &&
+          (entry.game || "Non renseigne") === game
+        );
+      })
+
+      // Tri par numéro du Pokédex
+      .sort((a, b) => {
+        return (a.dex || 9999) - (b.dex || 9999)
+          || a.name.localeCompare(b.name);
+      });
+
+    el.grid.innerHTML = `
+    <div class="timeline-results">
+
+      <div class="timeline-results-header">
+
+        <button
+          id="game-back"
+          class="timeline-back"
+          type="button"
+        >
+          <span>←</span>
+          Retour aux statistiques
+        </button>
+
+        <div class="timeline-results-title">
+
+          <span class="eyebrow">
+            Jeu
+          </span>
+
+          <h3>
+            ${escapeHtml(game)}
+          </h3>
+
+          <p>
+            ${pokemon.length}
+            shiny${pokemon.length > 1 ? "s" : ""}
+          </p>
+
+        </div>
+
+      </div>
+
+      <div class="timeline-pokemon-grid">
+
+        ${pokemon.length
+        ? renderGridCards(pokemon, { all: false })
+        : `
+              <p class="empty-state">
+                Aucun shiny obtenu sur ce jeu.
+              </p>
+            `
+      }
+
+      </div>
+
+    </div>
+  `;
+
+    // Retour aux statistiques
+    el.grid
+      .querySelector("#game-back")
+      ?.addEventListener("click", () => {
+        document.querySelector(".progress-panel").style.display = "";
+        renderStatsPageOptimized();
+      });
+
+    // Ouverture des fiches Pokémon
+    el.grid
+      .querySelectorAll(".pokemon-card")
+      .forEach((card) => {
+        card.addEventListener("click", () => {
+          openEntry(card.dataset.id);
+        });
+      });
+  }
+
   function renderTimelineChart(title, entries) {
     if (!entries.length) return "";
-    const max = Math.max(...entries.map(e => e[1]));
-    const cols = entries.map(([ym, count], i) => {
-      const h = Math.max(4, Math.round((count / max) * 100));
-      return `
-        <div class="tl-col" title="${formatMonth(ym)}: ${count}">
-          <div class="tl-bar" style="height:${h}%"></div>
-          <span class="tl-label">${formatMonthCompact(ym)}</span>
+
+    const years = {};
+
+    // Création de toutes les années / tous les mois
+    entries.forEach(([ym, count]) => {
+      const [year, month] = ym.split("-");
+
+      if (!years[year]) {
+        years[year] = {
+          total: 0,
+          months: Array.from({ length: 12 }, (_, i) => ({
+            month: i + 1,
+            count: 0
+          }))
+        };
+      }
+
+      years[year].total += count;
+      years[year].months[Number(month) - 1].count += count;
+    });
+
+    const yearEntries = Object.entries(years)
+      .sort(([a], [b]) => Number(a) - Number(b));
+
+    // Même échelle pour TOUT le graphique
+    const maxValue = Math.max(
+      ...yearEntries.map(([, data]) => data.total),
+      ...yearEntries.flatMap(([, data]) =>
+        data.months.map(month => month.count)
+      )
+    );
+
+    const monthNames = [
+      "Jan", "Fév", "Mar", "Avr",
+      "Mai", "Juin", "Juil", "Aoû",
+      "Sep", "Oct", "Nov", "Déc"
+    ];
+
+    const groups = yearEntries.map(([year, data]) => {
+
+      const yearHeight = Math.max(
+        3,
+        Math.round((data.total / maxValue) * 100)
+      );
+
+      const months = data.months.map(month => {
+
+        const h = month.count === 0
+          ? 0
+          : Math.max(
+            3,
+            Math.round((month.count / maxValue) * 100)
+          );
+
+        const fullMonth = new Date(
+          Number(year),
+          month.month - 1,
+          1
+        ).toLocaleDateString("fr-FR", {
+          month: "long",
+          year: "numeric"
+        });
+
+        return `
+        <div class="tl-month-col">
+
+          <div class="tl-bar-zone">
+
+            ${month.count > 0 ? `
+              <div
+                class="tl-bar tl-month-bar"
+                style="height:${h}%"
+                data-timeline-open-year="${year}"
+                data-timeline-open-month="${month.month}"
+              >
+                <div class="tl-tooltip">
+                  <span class="tl-tooltip-date">
+                    ${escapeHtml(fullMonth)}
+                  </span>
+
+                  <span class="tl-tooltip-value">
+                    <strong>${month.count}</strong>
+                    shiny${month.count > 1 ? "s" : ""}
+                  </span>
+                </div>
+              </div>
+            ` : ""}
+
+          </div>
+
+          <span class="tl-month-label">
+            ${monthNames[month.month - 1]}
+          </span>
+
         </div>
       `;
-    }).join("");
-    return `
-      <div class="stats-card">
-        <h3 class="stats-card-title">${escapeHtml(title)}</h3>
-        <p class="stats-card-description"><em>${escapeHtml(getStatsDescription(title))}</em></p>
-        <div class="tl-chart">${cols}</div>
+      }).join("");
+
+      return `
+      <div class="tl-year-group" data-year="${year}">
+
+        <!-- ANNÉE FERMÉE -->
+        <div class="tl-year-closed">
+
+          <div class="tl-bar-zone">
+
+            <div
+              class="tl-bar tl-year-bar"
+              style="height:${yearHeight}%"
+              data-timeline-open-year="${year}"
+            >
+              <div class="tl-tooltip">
+
+                <span class="tl-tooltip-date">
+                  Année ${year}
+                </span>
+
+                <span class="tl-tooltip-value">
+                  <strong>${data.total}</strong>
+                  shiny${data.total > 1 ? "s" : ""}
+                </span>
+
+              </div>
+            </div>
+
+          </div>
+
+          <button
+            class="tl-year-toggle"
+            type="button"
+            data-timeline-year="${year}"
+            aria-expanded="false"
+          >
+            ${year}
+            <span class="tl-year-arrow">⌄</span>
+          </button>
+
+        </div>
+
+
+        <!-- ANNÉE OUVERTE -->
+        <div class="tl-year-open">
+
+          <div class="tl-open-header">
+            <button
+              class="tl-year-toggle tl-year-toggle-open"
+              type="button"
+              data-timeline-year="${year}"
+              aria-expanded="true"
+            >
+              <span>${year}</span>
+              <span class="tl-year-total">
+                ${data.total} shiny
+              </span>
+              <span class="tl-year-arrow">⌃</span>
+            </button>
+          </div>
+
+          <div class="tl-months">
+            ${months}
+          </div>
+
+        </div>
+
       </div>
     `;
+    }).join("");
+
+    return `
+    <div class="stats-card timeline-card">
+
+      <h3 class="stats-card-title">
+        ${escapeHtml(title)}
+      </h3>
+
+      <p class="stats-card-description">
+        <em>${escapeHtml(getStatsDescription(title))}</em>
+      </p>
+
+      <div class="tl-years">
+        ${groups}
+      </div>
+
+    </div>
+  `;
+  }
+
+  function openTimelinePeriod(year, month = null) {
+    document.querySelector(".progress-panel").style.display = "none";
+    const periodPrefix = month
+      ? `${year}-${String(month).padStart(2, "0")}`
+      : String(year);
+
+    const pokemon = state.pokemon
+      .filter((p) => {
+        const entry = state.entries[p.id];
+
+        if (!entry?.caught || !entry.date) {
+          return false;
+        }
+
+        return month
+          ? entry.date.startsWith(periodPrefix)
+          : entry.date.startsWith(`${year}-`);
+      })
+      .sort((a, b) => {
+        const dateA = state.entries[a.id].date;
+        const dateB = state.entries[b.id].date;
+
+        return dateA.localeCompare(dateB);
+      });
+
+    const title = month
+      ? new Date(year, month - 1, 1)
+        .toLocaleDateString("fr-FR", {
+          month: "long",
+          year: "numeric"
+        })
+      : `Année ${year}`;
+
+    el.pageTitle.textContent = title;
+
+    el.pageSubtitle.textContent =
+      `${pokemon.length} shiny${pokemon.length > 1 ? "s" : ""} obtenu${pokemon.length > 1 ? "s" : ""}`;
+
+    el.progressBar.style.width = "100%";
+
+    el.grid.innerHTML = `
+    <div class="timeline-results">
+
+      <div class="timeline-results-header">
+
+        <button
+          id="timeline-back"
+          class="timeline-back"
+          type="button"
+        >
+          <span>←</span>
+          Retour aux statistiques
+        </button>
+
+        <div class="timeline-results-title">
+          <span class="eyebrow">
+            Captures dans le temps
+          </span>
+
+          <h3>
+            ${escapeHtml(title)}
+          </h3>
+
+          <p>
+            ${pokemon.length}
+            shiny${pokemon.length > 1 ? "s" : ""}
+          </p>
+        </div>
+
+      </div>
+
+      <div class="timeline-pokemon-grid">
+        ${pokemon.length
+        ? renderGridCards(pokemon, { all: false })
+        : `<p class="empty-state">
+                 Aucun shiny pour cette période.
+               </p>`
+      }
+      </div>
+
+    </div>
+  `;
+
+    /* Retour */
+
+    el.grid
+      .querySelector("#timeline-back")
+      ?.addEventListener("click", () => {
+        document.querySelector(".progress-panel").style.display = "";
+        renderStatsPageOptimized();
+      });
+
+    /* Cartes Pokémon */
+
+    el.grid
+      .querySelectorAll(".pokemon-card")
+      .forEach((card) => {
+        card.addEventListener("click", () => {
+          openEntry(card.dataset.id);
+        });
+      });
   }
 
   function chooseRandomPokemon(pokemon) {
