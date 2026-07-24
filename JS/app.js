@@ -377,6 +377,7 @@
       <section class="hunt-panel">
         <div class="hunt-copy">
           <p class="eyebrow">Prochaine cible</p>
+          <p>Choix aléatoire de la prochaine cible parmi les shiny manquants</p>
           <h3>${escapeHtml(currentPick.name)}</h3>
         </div>
         <div class="hunt-card">
@@ -487,7 +488,7 @@
           <div class="stats-kpi">
             <span class="stats-kpi-value">${caught.length}</span>
             <span class="stats-kpi-label">Shiny captures</span>
-            <em class="stats-kpi-note">Total des Pokemon marques comme obtenus.</em>
+            <em class="stats-kpi-note">Total des Shiny obtenus.</em>
           </div>
           <div class="stats-kpi">
             <span class="stats-kpi-value">${((caught.length / total) * 100).toFixed(1)}%</span>
@@ -498,31 +499,31 @@
           <div class="stats-kpi">
             <span class="stats-kpi-value">${avgEncounters.toLocaleString("fr-FR")}</span>
             <span class="stats-kpi-label">Moy. rencontres</span>
-            <em class="stats-kpi-note">Moyenne des chasses avec rencontres renseignees.</em>
+            <em class="stats-kpi-note">Moyenne des rencontres globales.</em>
           </div>` : ""}
           ${bestMonth ? `
           <div class="stats-kpi">
             <span class="stats-kpi-value">${bestMonth[1]}</span>
             <span class="stats-kpi-label">Record mensuel (${formatMonth(bestMonth[0])})</span>
-            <em class="stats-kpi-note">Ton mois le plus productif avec une date renseignee.</em>
+            <em class="stats-kpi-note">Mois le plus productif en shiny.</em>
           </div>` : ""}
           ${lastCaught ? `
           <div class="stats-kpi">
             <span class="stats-kpi-value stats-kpi-name">${escapeHtml(lastCaught.name)}</span>
             <span class="stats-kpi-label">Dernier shiny (${new Date(state.entries[lastCaught.id].date + "T00:00:00").toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })})</span>
-            <em class="stats-kpi-note">Derniere capture connue dans tes donnees.</em>
+            <em class="stats-kpi-note">Derniere capture.</em>
           </div>` : ""}
           ${maxEncountersEntry ? `
           <div class="stats-kpi">
             <span class="stats-kpi-value">${Number(state.entries[maxEncountersEntry.id].encounters).toLocaleString("fr-FR")}</span>
             <span class="stats-kpi-label">Max rencontres (${escapeHtml(maxEncountersEntry.name)})</span>
-            <em class="stats-kpi-note">La chasse la plus longue que tu as notee.</em>
+            <em class="stats-kpi-note">La shasse la plus longue.</em>
           </div>` : ""}
           ${minEncountersEntry ? `
           <div class="stats-kpi">
             <span class="stats-kpi-value">${Number(state.entries[minEncountersEntry.id].encounters).toLocaleString("fr-FR")}</span>
             <span class="stats-kpi-label">Min rencontres (${escapeHtml(minEncountersEntry.name)})</span>
-            <em class="stats-kpi-note">La chasse la plus courte que tu as notee.</em>
+            <em class="stats-kpi-note">La shasse la plus courte.</em>
           </div>` : ""}
         </div>
 
@@ -640,7 +641,7 @@
           <div class="stats-kpi">
             <span class="stats-kpi-value">${caught.length}</span>
             <span class="stats-kpi-label">Shiny captures</span>
-            <em class="stats-kpi-note">Total des Pokemon marques comme obtenus.</em>
+            <em class="stats-kpi-note">Total des shiny obtenues</em>
           </div>
           <div class="stats-kpi">
             <span class="stats-kpi-value">${completion.toFixed(1)}%</span>
@@ -651,31 +652,31 @@
           <div class="stats-kpi">
             <span class="stats-kpi-value">${avgEncounters.toLocaleString("fr-FR")}</span>
             <span class="stats-kpi-label">Moy. rencontres</span>
-            <em class="stats-kpi-note">Moyenne des chasses avec rencontres renseignees.</em>
+            <em class="stats-kpi-note">Moyenne de rencontre globale</em>
           </div>` : ""}
           ${bestMonth ? `
           <div class="stats-kpi">
             <span class="stats-kpi-value">${bestMonth[1]}</span>
             <span class="stats-kpi-label">Record mensuel (${formatMonth(bestMonth[0])})</span>
-            <em class="stats-kpi-note">Ton mois le plus productif avec une date renseignee.</em>
+            <em class="stats-kpi-note">Mois le plus productif</em>
           </div>` : ""}
           ${lastCaught ? `
           <div class="stats-kpi">
             <span class="stats-kpi-value stats-kpi-name">${escapeHtml(lastCaught.name)}</span>
             <span class="stats-kpi-label">Dernier shiny (${new Date(state.entries[lastCaught.id].date + "T00:00:00").toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })})</span>
-            <em class="stats-kpi-note">Derniere capture connue dans tes donnees.</em>
+            <em class="stats-kpi-note">Derniere capture</em>
           </div>` : ""}
           ${maxEncountersEntry ? `
           <div class="stats-kpi">
             <span class="stats-kpi-value">${Number(state.entries[maxEncountersEntry.id].encounters).toLocaleString("fr-FR")}</span>
             <span class="stats-kpi-label">Max rencontres (${escapeHtml(maxEncountersEntry.name)})</span>
-            <em class="stats-kpi-note">La chasse la plus longue que tu as notee.</em>
+            <em class="stats-kpi-note">La shasse la plus longue</em>
           </div>` : ""}
           ${minEncountersEntry ? `
           <div class="stats-kpi">
             <span class="stats-kpi-value">${Number(state.entries[minEncountersEntry.id].encounters).toLocaleString("fr-FR")}</span>
             <span class="stats-kpi-label">Min rencontres (${escapeHtml(minEncountersEntry.name)})</span>
-            <em class="stats-kpi-note">La chasse la plus courte que tu as notee.</em>
+            <em class="stats-kpi-note">La shasse la plus courte</em>
           </div>` : ""}
         </div>
         <div class="stats-grid stats-grid-duo">
@@ -707,11 +708,11 @@
 
   function getStatsDescription(title) {
     const cleanTitle = title.toLowerCase();
-    if (cleanTitle.includes("jeu")) return "Vue par version pour savoir ou tu as le plus chasse.";
-    if (cleanTitle.includes("ball")) return "Top des balls utilisees sur tes captures renseignees.";
-    if (cleanTitle.includes("méthode") || cleanTitle.includes("methode")) return "Repartition par methode pour reperer tes habitudes de chasse.";
+    if (cleanTitle.includes("jeu")) return "Repartition par version.";
+    if (cleanTitle.includes("ball")) return "Top des balls utilisees.";
+    if (cleanTitle.includes("méthode") || cleanTitle.includes("methode")) return "Repartition par methode & moyenne de rencontre.";
     if (cleanTitle.includes("temps")) return "Evolution de tes captures selon les dates renseignees.";
-    return "Repartition des captures dans cette categorie.";
+    return "Complétion par génération.";
   }
 
   function renderBarChart(title, entries, total, wide = false, averages = null) {
