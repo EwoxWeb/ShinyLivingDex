@@ -59,7 +59,8 @@
     gender: document.querySelector("#gender-input"),
     date: document.querySelector("#date-input"),
     origin: document.querySelector("#origin-input"),
-    deleteEntry: document.querySelector("#delete-entry")
+    deleteEntry: document.querySelector("#delete-entry"),
+    statsButton: document.querySelector("#stats-button")
   };
 
   const pages = [
@@ -74,7 +75,8 @@
     { id: "gen-7", label: "Gen 7", title: "Generation 7", range: [722, 809] },
     { id: "gen-8", label: "Gen 8", title: "Generation 8", range: [810, 905] },
     { id: "gen-9", label: "Gen 9", title: "Generation 9", range: [906, 1025] },
-    { id: "forms", label: "Formes", title: "Formes regionales et variantes", forms: true }
+    { id: "forms", label: "Formes", title: "Formes regionales et variantes", forms: true },
+    { id: "stats", label: "Stats", title: "Statistiques", stats: true }
   ];
 
   const formCategories = [
@@ -113,6 +115,9 @@
       location.hash = "hunt";
     });
     el.importInput.addEventListener("change", importData);
+    el.statsButton.addEventListener("click", () => {
+      location.hash = "stats";
+    });
     window.addEventListener("hashchange", () => {
       state.activePage = location.hash.replace("#", "") || "all";
       render();
@@ -217,7 +222,7 @@
   }
 
   function renderTabs() {
-    el.tabs.innerHTML = pages.filter((page) => !page.hunt).map((page) => (
+    el.tabs.innerHTML = pages.filter((page) => !page.hunt && !page.stats).map((page) => (
       `<button class="tab" type="button" data-page="${page.id}">${page.label}</button>`
     )).join("");
     el.tabs.addEventListener("click", (event) => {
@@ -250,7 +255,8 @@
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.classList.toggle("active", tab.dataset.page === page.id);
     });
-    el.huntButton.classList.toggle("active", page.hunt);
+    el.huntButton.classList.toggle("active", Boolean(page.hunt));
+    el.statsButton.classList.toggle("active", Boolean(page.stats));
     el.formTabs.classList.toggle("visible", Boolean(page.forms));
     el.formTabs.querySelectorAll("[data-form-category]").forEach((tab) => {
       tab.classList.toggle("active", tab.dataset.formCategory === state.activeFormCategory);
@@ -258,6 +264,11 @@
 
     if (page.hunt) {
       renderHuntPage(pagePokemon, owned);
+      return;
+    }
+
+    if (page.stats) {
+      renderStatsPageOptimized();
       return;
     }
 
@@ -279,6 +290,9 @@
     }
     if (page.forms) {
       return state.pokemon.filter((pokemon) => pokemon.isForm && pokemon.formCategory === state.activeFormCategory);
+    }
+    if (page.stats) {
+      return [];
     }
     return state.pokemon.filter((pokemon) => pokemon.dex >= page.range[0] && pokemon.dex <= page.range[1] && !pokemon.isForm);
   }
@@ -365,15 +379,388 @@
           <p class="eyebrow">Prochaine cible</p>
           <h3>${escapeHtml(currentPick.name)}</h3>
         </div>
+        <div class="hunt-card">
+          ${renderCard(currentPick)}
+        </div>
         <button id="reroll-hunt" class="primary" type="button">Relancer</button>
       </section>
-      <div class="hunt-card">${renderCard(currentPick)}</div>
     `;
     el.grid.querySelector("#reroll-hunt").addEventListener("click", async () => {
       await animateHuntRoll(missing);
       render();
     });
     el.grid.querySelector(".pokemon-card").addEventListener("click", () => openEntry(currentPick.id));
+  }
+
+  // ========================
+  // Page Stats
+  // ========================
+
+  function renderStatsPage() {
+    const caught = state.pokemon.filter(p => state.entries[p.id]?.caught);
+    const total = state.pokemon.length;
+
+    el.pageTitle.textContent = "Statistiques";
+    el.pageSubtitle.textContent = `${caught.length} shiny captures sur ${total}`;
+    el.progressBar.style.width = total ? `${(caught.length / total) * 100}%` : "0";
+    el.ownedCount.textContent = caught.length;
+    el.totalCount.textContent = `/ ${total} captures`;
+
+    if (!caught.length) {
+      el.grid.innerHTML = `<p class="empty-state">Aucun shiny capture pour l'instant. Lance une chasse !</p>`;
+      return;
+    }
+
+    // --- Calcul des données ---
+    const countBy = (key) => {
+      const map = {};
+      caught.forEach(p => {
+        const v = state.entries[p.id][key] || "Non renseigne";
+        map[v] = (map[v] || 0) + 1;
+      });
+      return Object.entries(map).sort((a, b) => b[1] - a[1]);
+    };
+
+    const byGame = countBy("game");
+    const byMethod = countBy("method");
+    const byBall = countBy("ball");
+    const methodEncounterAverages = {};
+    byMethod.forEach(([method]) => {
+      const values = caught
+        .filter((p) => (state.entries[p.id].method || "Non renseigne") === method)
+        .map((p) => Number(state.entries[p.id].encounters))
+        .filter((value) => Number.isFinite(value) && value > 0);
+      methodEncounterAverages[method] = values.length
+        ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
+        : null;
+    });
+
+    // Par génération
+    const byGen = {};
+    caught.forEach(p => {
+      const g = p.isForm ? "Formes" : `Gen ${p.generation || "?"}`;
+      byGen[g] = (byGen[g] || 0) + 1;
+    });
+    const byGenEntries = Object.entries(byGen).sort((a, b) => {
+      if (a[0] === "Formes") return 1;
+      if (b[0] === "Formes") return -1;
+      return a[0].localeCompare(b[0], undefined, { numeric: true });
+    });
+
+    // Par mois/année
+    const byMonth = {};
+    caught.forEach(p => {
+      const d = state.entries[p.id].date;
+      if (d) {
+        const key = d.slice(0, 7); // YYYY-MM
+        byMonth[key] = (byMonth[key] || 0) + 1;
+      }
+    });
+    const byMonthEntries = Object.entries(byMonth).sort((a, b) => a[0].localeCompare(b[0]));
+
+    // Streak / meilleur mois
+    const bestMonth = byMonthEntries.reduce((best, cur) => cur[1] > (best?.[1] || 0) ? cur : best, null);
+    const withEncounters = caught.filter(p => state.entries[p.id].encounters > 0);
+    const avgEncounters = withEncounters.length
+      ? Math.round(withEncounters.reduce((s, p) => s + Number(state.entries[p.id].encounters), 0) / withEncounters.length)
+      : null;
+    const maxEncountersEntry = withEncounters.reduce((best, p) => {
+      const e = Number(state.entries[p.id].encounters);
+      return e > (best ? Number(state.entries[best.id].encounters) : 0) ? p : best;
+    }, null);
+    const minEncountersEntry = withEncounters.reduce((best, p) => {
+      const e = Number(state.entries[p.id].encounters);
+      return e < (best ? Number(state.entries[best.id].encounters) : Infinity) ? p : best;
+    }, null);
+
+    // Dernier shiny capturé
+    const withDate = caught.filter(p => state.entries[p.id].date).sort((a, b) =>
+      state.entries[b.id].date.localeCompare(state.entries[a.id].date)
+    );
+    const lastCaught = withDate[0];
+
+    el.grid.innerHTML = `
+      <div class="stats-page">
+
+        <!-- KPIs -->
+        <div class="stats-kpis">
+          <div class="stats-kpi">
+            <span class="stats-kpi-value">${caught.length}</span>
+            <span class="stats-kpi-label">Shiny captures</span>
+            <em class="stats-kpi-note">Total des Pokemon marques comme obtenus.</em>
+          </div>
+          <div class="stats-kpi">
+            <span class="stats-kpi-value">${((caught.length / total) * 100).toFixed(1)}%</span>
+            <span class="stats-kpi-label">Completion</span>
+            <em class="stats-kpi-note">Part du living dex deja remplie.</em>
+          </div>
+          ${avgEncounters !== null ? `
+          <div class="stats-kpi">
+            <span class="stats-kpi-value">${avgEncounters.toLocaleString("fr-FR")}</span>
+            <span class="stats-kpi-label">Moy. rencontres</span>
+            <em class="stats-kpi-note">Moyenne des chasses avec rencontres renseignees.</em>
+          </div>` : ""}
+          ${bestMonth ? `
+          <div class="stats-kpi">
+            <span class="stats-kpi-value">${bestMonth[1]}</span>
+            <span class="stats-kpi-label">Record mensuel (${formatMonth(bestMonth[0])})</span>
+            <em class="stats-kpi-note">Ton mois le plus productif avec une date renseignee.</em>
+          </div>` : ""}
+          ${lastCaught ? `
+          <div class="stats-kpi">
+            <span class="stats-kpi-value stats-kpi-name">${escapeHtml(lastCaught.name)}</span>
+            <span class="stats-kpi-label">Dernier shiny (${new Date(state.entries[lastCaught.id].date + "T00:00:00").toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })})</span>
+            <em class="stats-kpi-note">Derniere capture connue dans tes donnees.</em>
+          </div>` : ""}
+          ${maxEncountersEntry ? `
+          <div class="stats-kpi">
+            <span class="stats-kpi-value">${Number(state.entries[maxEncountersEntry.id].encounters).toLocaleString("fr-FR")}</span>
+            <span class="stats-kpi-label">Max rencontres (${escapeHtml(maxEncountersEntry.name)})</span>
+            <em class="stats-kpi-note">La chasse la plus longue que tu as notee.</em>
+          </div>` : ""}
+          ${minEncountersEntry ? `
+          <div class="stats-kpi">
+            <span class="stats-kpi-value">${Number(state.entries[minEncountersEntry.id].encounters).toLocaleString("fr-FR")}</span>
+            <span class="stats-kpi-label">Min rencontres (${escapeHtml(minEncountersEntry.name)})</span>
+            <em class="stats-kpi-note">La chasse la plus courte que tu as notee.</em>
+          </div>` : ""}
+        </div>
+
+        <!-- Charts row 1 -->
+        <div class="stats-grid stats-grid-duo">
+          ${renderBarChart("Par génération", byGenEntries, caught.length)}
+          ${byMonthEntries.length ? renderTimelineChart("Captures dans le temps", byMonthEntries) : ""}
+        </div>
+
+        <!-- Charts row 2 -->
+        <div class="stats-grid stats-grid-duo">
+          ${renderBarChart("Par méthode", byMethod, caught.length, false, methodEncounterAverages)}
+          ${renderBarChart("Par Poké Ball", byBall.slice(0, 12), caught.length)}
+        </div>
+
+        <!-- Charts row 3 -->
+        <div class="stats-grid stats-grid-single">
+          ${renderBarChart("Par jeu", byGame, caught.length, true)}
+        </div>
+
+      </div>
+    `;
+  }
+
+  function renderStatsPageOptimized() {
+    const total = state.pokemon.length;
+    const caught = [];
+    const byGame = {};
+    const byMethod = {};
+    const byBall = {};
+    const byGen = {};
+    const byMonth = {};
+    const methodEncounterSum = {};
+    const methodEncounterCount = {};
+    let totalEncounterSum = 0;
+    let totalEncounterCount = 0;
+    let maxEncountersEntry = null;
+    let minEncountersEntry = null;
+    let lastCaught = null;
+
+    for (const pokemon of state.pokemon) {
+      const entry = state.entries[pokemon.id];
+      if (!entry?.caught) continue;
+      caught.push(pokemon);
+
+      const game = entry.game || "Non renseigne";
+      const method = entry.method || "Non renseigne";
+      const ball = entry.ball || "Non renseigne";
+      const gen = pokemon.isForm ? "Formes" : `Gen ${pokemon.generation || "?"}`;
+      const encounters = Number(entry.encounters);
+
+      byGame[game] = (byGame[game] || 0) + 1;
+      byMethod[method] = (byMethod[method] || 0) + 1;
+      byBall[ball] = (byBall[ball] || 0) + 1;
+      byGen[gen] = (byGen[gen] || 0) + 1;
+
+      if (entry.date) {
+        const monthKey = entry.date.slice(0, 7);
+        byMonth[monthKey] = (byMonth[monthKey] || 0) + 1;
+        if (!lastCaught || entry.date > state.entries[lastCaught.id].date) {
+          lastCaught = pokemon;
+        }
+      }
+
+      if (Number.isFinite(encounters) && encounters > 0) {
+        totalEncounterSum += encounters;
+        totalEncounterCount += 1;
+        methodEncounterSum[method] = (methodEncounterSum[method] || 0) + encounters;
+        methodEncounterCount[method] = (methodEncounterCount[method] || 0) + 1;
+        if (!maxEncountersEntry || encounters > Number(state.entries[maxEncountersEntry.id].encounters)) {
+          maxEncountersEntry = pokemon;
+        }
+        if (!minEncountersEntry || encounters < Number(state.entries[minEncountersEntry.id].encounters)) {
+          minEncountersEntry = pokemon;
+        }
+      }
+    }
+
+    if (!caught.length) {
+      el.pageTitle.textContent = "Statistiques";
+      el.pageSubtitle.textContent = "Aucune capture";
+      el.grid.innerHTML = `<p class="empty-state">Aucun shiny capture pour l'instant. Lance une chasse !</p>`;
+      el.progressBar.style.width = "0";
+      el.ownedCount.textContent = "0";
+      el.totalCount.textContent = `/ ${total} captures`;
+      return;
+    }
+
+    const byGameEntries = Object.entries(byGame).sort((a, b) => b[1] - a[1]);
+    const byMethodEntries = Object.entries(byMethod).sort((a, b) => b[1] - a[1]);
+    const byBallEntries = Object.entries(byBall).sort((a, b) => b[1] - a[1]);
+    const byGenEntries = Object.entries(byGen).sort((a, b) => {
+      if (a[0] === "Formes") return 1;
+      if (b[0] === "Formes") return -1;
+      return a[0].localeCompare(b[0], undefined, { numeric: true });
+    });
+    const byMonthEntries = Object.entries(byMonth).sort((a, b) => a[0].localeCompare(b[0]));
+    const bestMonth = byMonthEntries.reduce((best, cur) => cur[1] > (best?.[1] || 0) ? cur : best, null);
+    const avgEncounters = totalEncounterCount ? Math.round(totalEncounterSum / totalEncounterCount) : null;
+    const methodEncounterAverages = {};
+    for (const method of Object.keys(methodEncounterSum)) {
+      methodEncounterAverages[method] = Math.round(methodEncounterSum[method] / methodEncounterCount[method]);
+    }
+
+    const completion = (caught.length / total) * 100;
+    el.pageTitle.textContent = "Statistiques";
+    el.pageSubtitle.textContent = `${caught.length} shiny captures sur ${total}`;
+    el.progressBar.style.width = `${completion}%`;
+    el.ownedCount.textContent = caught.length;
+    el.totalCount.textContent = `/ ${total} captures`;
+
+    el.grid.innerHTML = `
+      <div class="stats-page">
+        <div class="stats-kpis">
+          <div class="stats-kpi">
+            <span class="stats-kpi-value">${caught.length}</span>
+            <span class="stats-kpi-label">Shiny captures</span>
+            <em class="stats-kpi-note">Total des Pokemon marques comme obtenus.</em>
+          </div>
+          <div class="stats-kpi">
+            <span class="stats-kpi-value">${completion.toFixed(1)}%</span>
+            <span class="stats-kpi-label">Completion</span>
+            <em class="stats-kpi-note">Part du living dex deja remplie.</em>
+          </div>
+          ${avgEncounters !== null ? `
+          <div class="stats-kpi">
+            <span class="stats-kpi-value">${avgEncounters.toLocaleString("fr-FR")}</span>
+            <span class="stats-kpi-label">Moy. rencontres</span>
+            <em class="stats-kpi-note">Moyenne des chasses avec rencontres renseignees.</em>
+          </div>` : ""}
+          ${bestMonth ? `
+          <div class="stats-kpi">
+            <span class="stats-kpi-value">${bestMonth[1]}</span>
+            <span class="stats-kpi-label">Record mensuel (${formatMonth(bestMonth[0])})</span>
+            <em class="stats-kpi-note">Ton mois le plus productif avec une date renseignee.</em>
+          </div>` : ""}
+          ${lastCaught ? `
+          <div class="stats-kpi">
+            <span class="stats-kpi-value stats-kpi-name">${escapeHtml(lastCaught.name)}</span>
+            <span class="stats-kpi-label">Dernier shiny (${new Date(state.entries[lastCaught.id].date + "T00:00:00").toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })})</span>
+            <em class="stats-kpi-note">Derniere capture connue dans tes donnees.</em>
+          </div>` : ""}
+          ${maxEncountersEntry ? `
+          <div class="stats-kpi">
+            <span class="stats-kpi-value">${Number(state.entries[maxEncountersEntry.id].encounters).toLocaleString("fr-FR")}</span>
+            <span class="stats-kpi-label">Max rencontres (${escapeHtml(maxEncountersEntry.name)})</span>
+            <em class="stats-kpi-note">La chasse la plus longue que tu as notee.</em>
+          </div>` : ""}
+          ${minEncountersEntry ? `
+          <div class="stats-kpi">
+            <span class="stats-kpi-value">${Number(state.entries[minEncountersEntry.id].encounters).toLocaleString("fr-FR")}</span>
+            <span class="stats-kpi-label">Min rencontres (${escapeHtml(minEncountersEntry.name)})</span>
+            <em class="stats-kpi-note">La chasse la plus courte que tu as notee.</em>
+          </div>` : ""}
+        </div>
+        <div class="stats-grid stats-grid-duo">
+          ${renderBarChart("Par génération", byGenEntries, caught.length)}
+          ${byMonthEntries.length ? renderTimelineChart("Captures dans le temps", byMonthEntries) : ""}
+        </div>
+        <div class="stats-grid stats-grid-duo">
+          ${renderBarChart("Par méthode", byMethodEntries, caught.length, false, methodEncounterAverages)}
+          ${renderBarChart("Par Poké Ball", byBallEntries.slice(0, 12), caught.length)}
+        </div>
+        <div class="stats-grid stats-grid-single">
+          ${renderBarChart("Par jeu", byGameEntries, caught.length, true)}
+        </div>
+      </div>
+    `;
+  }
+
+  function formatMonth(ym) {
+    const [y, m] = ym.split("-");
+    const months = ["jan", "fév", "mar", "avr", "mai", "jun", "jul", "aoû", "sep", "oct", "nov", "déc"];
+    return `${months[parseInt(m, 10) - 1]} ${y}`;
+  }
+
+  function formatMonthCompact(ym) {
+    const [y, m] = ym.split("-");
+    const months = ["jan", "fév", "mar", "avr", "mai", "jun", "jul", "aoû", "sep", "oct", "nov", "déc"];
+    return `${months[parseInt(m, 10) - 1]} ${y.slice(2)}`;
+  }
+
+  function getStatsDescription(title) {
+    const cleanTitle = title.toLowerCase();
+    if (cleanTitle.includes("jeu")) return "Vue par version pour savoir ou tu as le plus chasse.";
+    if (cleanTitle.includes("ball")) return "Top des balls utilisees sur tes captures renseignees.";
+    if (cleanTitle.includes("méthode") || cleanTitle.includes("methode")) return "Repartition par methode pour reperer tes habitudes de chasse.";
+    if (cleanTitle.includes("temps")) return "Evolution de tes captures selon les dates renseignees.";
+    return "Repartition des captures dans cette categorie.";
+  }
+
+  function renderBarChart(title, entries, total, wide = false, averages = null) {
+    if (!entries.length) return "";
+    const max = entries[0][1];
+    const bars = entries.map(([label, count]) => {
+      const pct = Math.round((count / max) * 100);
+      const share = ((count / total) * 100).toFixed(1);
+      const averagePart = averages && averages[label] !== null && averages[label] !== undefined
+        ? ` - moy. ${averages[label].toLocaleString("fr-FR")}`
+        : "";
+      return `
+        <div class="stat-bar-row">
+          <span class="stat-bar-label" title="${escapeHtml(label)}">${escapeHtml(label)}${escapeHtml(averagePart)}</span>
+          <div class="stat-bar-track">
+            <div class="stat-bar-fill" style="width:${pct}%"></div>
+          </div>
+          <span class="stat-bar-count">${count} <em>${share}%</em></span>
+        </div>
+      `;
+    }).join("");
+    return `
+      <div class="stats-card${wide ? " stats-card-wide" : ""}">
+        <h3 class="stats-card-title">${escapeHtml(title)}</h3>
+        <p class="stats-card-description"><em>${escapeHtml(getStatsDescription(title))}</em></p>
+        <div class="stat-bars">${bars}</div>
+      </div>
+    `;
+  }
+
+  function renderTimelineChart(title, entries) {
+    if (!entries.length) return "";
+    const max = Math.max(...entries.map(e => e[1]));
+    const cols = entries.map(([ym, count], i) => {
+      const h = Math.max(4, Math.round((count / max) * 100));
+      return `
+        <div class="tl-col" title="${formatMonth(ym)}: ${count}">
+          <div class="tl-bar" style="height:${h}%"></div>
+          <span class="tl-label">${formatMonthCompact(ym)}</span>
+        </div>
+      `;
+    }).join("");
+    return `
+      <div class="stats-card">
+        <h3 class="stats-card-title">${escapeHtml(title)}</h3>
+        <p class="stats-card-description"><em>${escapeHtml(getStatsDescription(title))}</em></p>
+        <div class="tl-chart">${cols}</div>
+      </div>
+    `;
   }
 
   function chooseRandomPokemon(pokemon) {
