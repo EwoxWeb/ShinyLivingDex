@@ -18,7 +18,7 @@
     "Honor Ball", "Luxe Ball", "Soin Ball", "Filet Ball", "Scuba Ball", "Faiblo Ball",
     "Chrono Ball", "Bis Ball", "Rapide Ball", "Sombre Ball", "Memoire Ball",
     "Safari Ball", "Parc Ball", "Speed Ball", "Niveau Ball", "Appat Ball",
-    "Masse Ball", "Love Ball", "Copain Ball", "Lune Ball", "Reve Ball", "Ultra Ball"
+    "Masse Ball", "Love Ball", "Copain Ball", "Lune Ball", "Reve Ball", "Ultra Ball", "Masse", "Mégamasse", "Gigamasse", "Plume", "Envol", "Propulse"
   ];
 
   const state = {
