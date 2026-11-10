@@ -1560,7 +1560,7 @@ menu {
 }
 
 .stat-bar-clickable:hover {
-  background: rgba(96, 180, 255, .08);
+  background: rgba(97, 180, 255, .08);
 }
 
 .stat-bar-clickable:hover .stat-bar-fill {
